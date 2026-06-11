@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Countdown } from "@/components/Countdown";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/tz";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -337,7 +338,7 @@ function BiddingHistoryRound({ round }: { round: RoundHistory }) {
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{round.name}</CardTitle>
         <p className="text-xs text-muted-foreground">
-          {new Date(round.startTime).toLocaleDateString()} – {new Date(round.endTime).toLocaleDateString()}
+          {formatDate(round.startTime)} – {formatDate(round.endTime)}
           {" · "}{round.items.length} items
         </p>
       </CardHeader>
@@ -376,7 +377,7 @@ function BiddingHistoryRound({ round }: { round: RoundHistory }) {
                         {b.username}
                       </span>
                       <span className="tabular-nums text-muted-foreground">
-                        {b.amount} pts · {new Date(b.timestamp).toLocaleTimeString()}
+                        {b.amount} pts · {formatTime(b.timestamp)}
                       </span>
                     </div>
                   ))}
@@ -420,7 +421,7 @@ function WinnerHistoryRound({ round }: { round: RoundHistory }) {
           <div>
             <CardTitle className="text-base">{round.name}</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {new Date(round.startTime).toLocaleDateString()} – {new Date(round.endTime).toLocaleDateString()}
+              {formatDate(round.startTime)} – {formatDate(round.endTime)}
               {" · "}{wonItems.length} items won
             </p>
           </div>
@@ -508,7 +509,7 @@ function ItemCard({ item }: { item: ItemRow }) {
                     {b.username}
                   </span>
                   <span className="tabular-nums text-muted-foreground">
-                    {b.amount} pts · {new Date(b.timestamp).toLocaleTimeString()}
+                    {b.amount} pts · {formatTime(b.timestamp)}
                   </span>
                 </div>
               ))}

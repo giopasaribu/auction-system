@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Countdown } from "@/components/Countdown";
+import { formatTime } from "@/lib/tz";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -244,7 +245,7 @@ function BidCard({
                     {b.username}
                   </span>
                   <span className="tabular-nums text-muted-foreground">
-                    {b.amount} pts · {new Date(b.timestamp).toLocaleTimeString()}
+                    {b.amount} pts · {formatTime(b.timestamp)}
                   </span>
                 </div>
               ))}

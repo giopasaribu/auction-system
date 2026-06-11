@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Countdown } from "@/components/Countdown";
+import { toInputLocal, fromInputLocal } from "@/lib/tz";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -442,15 +443,10 @@ function AddRoundDialog({ onAdded }: { onAdded: () => void }) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  function toLocal(d: Date) {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-
   function prefill() {
     const now = new Date();
-    setStartTime(toLocal(now));
-    setEndTime(toLocal(new Date(now.getTime() + 60 * 60 * 1000)));
+    setStartTime(toInputLocal(now));
+    setEndTime(toInputLocal(new Date(now.getTime() + 60 * 60 * 1000)));
   }
 
   async function submit() {
@@ -461,8 +457,8 @@ function AddRoundDialog({ onAdded }: { onAdded: () => void }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name, description,
-        startTime: new Date(startTime).toISOString(),
-        endTime: new Date(endTime).toISOString(),
+        startTime: fromInputLocal(startTime),
+        endTime: fromInputLocal(endTime),
       }),
     });
     const d = await res.json();
@@ -516,20 +512,14 @@ function EditRoundDialog({
   onOpenChange: (o: boolean) => void;
   onUpdated: () => void;
 }) {
-  function toLocal(d: string) {
-    const dt = new Date(d);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-  }
-
   const [name, setName] = useState(round.name);
-  const [endTime, setEndTime] = useState(toLocal(round.endTime));
+  const [endTime, setEndTime] = useState(toInputLocal(round.endTime));
 
   async function submit() {
     const res = await fetch(`/api/rounds/${round.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, endTime: new Date(endTime).toISOString() }),
+      body: JSON.stringify({ name, endTime: fromInputLocal(endTime) }),
     });
     const d = await res.json();
     if (!res.ok) return toast.error(d.error ?? "Failed");
@@ -586,16 +576,11 @@ function AddItemDialog({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  function toLocal(d: Date) {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-
   function prefillTimes() {
     if (standalone || !defaultRoundId) {
       const now = new Date();
-      setStartTime(toLocal(now));
-      setEndTime(toLocal(new Date(now.getTime() + 60 * 60 * 1000)));
+      setStartTime(toInputLocal(now));
+      setEndTime(toInputLocal(new Date(now.getTime() + 60 * 60 * 1000)));
     }
   }
 
@@ -614,8 +599,8 @@ function AddItemDialog({
     } else {
       // Standalone — times required
       if (!startTime || !endTime) return toast.error("Set start and end time");
-      body.startTime = new Date(startTime).toISOString();
-      body.endTime = new Date(endTime).toISOString();
+      body.startTime = fromInputLocal(startTime);
+      body.endTime = fromInputLocal(endTime);
     }
 
     const res = await fetch("/api/items", {

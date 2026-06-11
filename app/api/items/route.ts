@@ -53,6 +53,18 @@ export async function GET() {
   return NextResponse.json(items.map(serializeItem));
 }
 
+export async function DELETE() {
+  const session = await getSession();
+  if (session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  // Delete all standalone items (no round) and their bids
+  const items = await prisma.item.findMany({ where: { roundId: null }, select: { id: true } });
+  const itemIds = items.map((i) => i.id);
+  await prisma.bid.deleteMany({ where: { itemId: { in: itemIds } } });
+  const { count } = await prisma.item.deleteMany({ where: { roundId: null } });
+  return NextResponse.json({ deleted: count });
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });

@@ -81,12 +81,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
 
-  // Detach items from round (don't delete them — they become standalone)
-  await prisma.item.updateMany({
-    where: { roundId: id },
-    data: { roundId: null, timeOverride: true },
-  });
-
+  // Delete all items in the round (and their bids), then delete the round
+  const items = await prisma.item.findMany({ where: { roundId: id }, select: { id: true } });
+  const itemIds = items.map((i) => i.id);
+  await prisma.bid.deleteMany({ where: { itemId: { in: itemIds } } });
+  await prisma.item.deleteMany({ where: { roundId: id } });
   await prisma.round.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

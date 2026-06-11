@@ -147,7 +147,12 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle>One-off Items</CardTitle>
-          <AddItemDialog rounds={[]} onAdded={refreshAll} standalone />
+          <div className="flex gap-2">
+            {standaloneItems.length > 0 && (
+              <RemoveAllItemsButton onRemoved={refreshAll} />
+            )}
+            <AddItemDialog rounds={[]} onAdded={refreshAll} standalone />
+          </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {standaloneItems.map((item) => (
@@ -213,6 +218,29 @@ function ImportItemsButton({ roundId, onImported }: { roundId: string; onImporte
   return (
     <Button size="sm" variant="outline" className="h-6 text-xs" onClick={run} disabled={loading}>
       {loading ? "Importing…" : "Import Items"}
+    </Button>
+  );
+}
+
+// ── Remove all standalone items button ─────────────────────────────────────
+
+function RemoveAllItemsButton({ onRemoved }: { onRemoved: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  async function run() {
+    if (!confirm("Remove all one-off items? This cannot be undone.")) return;
+    setLoading(true);
+    const res = await fetch("/api/items", { method: "DELETE" });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) return toast.error(data.error ?? "Failed");
+    toast.success(`Removed ${data.deleted} item${data.deleted !== 1 ? "s" : ""}`);
+    onRemoved();
+  }
+
+  return (
+    <Button size="sm" variant="destructive" onClick={run} disabled={loading}>
+      {loading ? "Removing…" : "Remove All"}
     </Button>
   );
 }

@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  totalPoints Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  bids        Bid[]
+  wonItems    Item[]   @relation("ItemWinner")
+}
+
+enum TimerMode {
+  hard
+  antisnipe
+}
+
+enum AuctionStatus {
+  scheduled
+  active
+  ended
+}
+
+enum BidStatus {
+  active
+  outbid
+  cancelled
+  won
+}
+
+model Round {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  status      AuctionStatus @default(scheduled)
+  createdAt   DateTime      @default(now())
+
+  items       Item[]
+}
+
+model Item {
+  id               String        @id @default(cuid())
+  name             String
+  description      String?
+  minBid           Int           @default(0)
+  startTime        DateTime
+  endTime          DateTime
+  timerMode        TimerMode     @default(hard)
+  antiSnipeMinutes Int?
+  status           AuctionStatus @default(scheduled)
+  winnerId         String?
+  winningBid       Int?
+  createdAt        DateTime      @default(now())
+
+  roundId          String?
+  timeOverride     Boolean       @default(false)
+
+  round            Round?        @relation(fields: [roundId], references: [id])
+  winner           Player?       @relation("ItemWinner", fields: [winnerId], references: [id])
+  bids             Bid[]
+
+  @@index([roundId])
+}
+
+model Bid {
+  id               String    @id @default(cuid())
+  itemId           String
+  playerId         String
+  amount           Int
+  timestamp        DateTime  @default(now())
+  isCurrentHighest Boolean   @default(false)
+  status           BidStatus @default(active)
+
+  item             Item      @relation(fields: [itemId], references: [id])
+  player           Player    @relation(fields: [playerId], references: [id])
+
+  @@index([itemId])
+  @@index([playerId])
+  @@index([itemId, isCurrentHighest])
+}

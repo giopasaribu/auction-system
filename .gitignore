@@ -50,3 +50,5 @@ SETUP.md
 .claude/
 
 /lib/generated/prisma
+
+.vercel

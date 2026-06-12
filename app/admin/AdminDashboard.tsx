@@ -143,27 +143,6 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Standalone items */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle>One-off Items</CardTitle>
-          <div className="flex gap-2">
-            {standaloneItems.length > 0 && (
-              <RemoveAllItemsButton onRemoved={refreshAll} />
-            )}
-            <AddItemDialog rounds={[]} onAdded={refreshAll} standalone />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {standaloneItems.map((item) => (
-            <ItemRow key={item.id} item={item} onUpdated={refreshAll} />
-          ))}
-          {standaloneItems.length === 0 && (
-            <p className="text-sm text-muted-foreground">No standalone items.</p>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -296,7 +275,7 @@ function RoundSection({ round, onUpdated }: { round: RoundRow; onUpdated: () => 
   const [editOpen, setEditOpen] = useState(false);
 
   async function deleteRound() {
-    if (!confirm(`Delete round "${round.name}"? Items will become standalone.`)) return;
+    if (!confirm(`Delete round "${round.name}"? Items in the round will be removed permanently.`)) return;
     await fetch(`/api/rounds/${round.id}`, { method: "DELETE" });
     toast.success("Round deleted");
     onUpdated();

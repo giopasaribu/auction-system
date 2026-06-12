@@ -218,10 +218,6 @@ function BidCard({
               : item.minBid > 0 ? `${item.minBid} pts (min)` : "No bids yet"}
           </span>
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Your available</span>
-          <span>{effectiveAvailable} pts</span>
-        </div>
         <div className="flex gap-2 pt-1">
           <Button size="sm" onClick={() => placeBid(true)} disabled={bidding} className="flex-1">+1</Button>
           <Input

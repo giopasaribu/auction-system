@@ -19,17 +19,26 @@ export async function processExpiredAuctions() {
     data: { status: AuctionStatus.active },
   });
 
-  // Close expired active items
-  const expiredItems = await prisma.item.findMany({
+  // Close expired active items — fetch only IDs here; re-read everything inside the transaction
+  // to prevent concurrent calls from double-decrementing the winner's points.
+  const expiredItemIds = await prisma.item.findMany({
     where: { status: AuctionStatus.active, endTime: { lte: now } },
-    include: {
-      bids: { where: { isCurrentHighest: true, status: BidStatus.active } },
-    },
+    select: { id: true },
   });
 
-  for (const item of expiredItems) {
+  for (const { id: itemId } of expiredItemIds) {
     await prisma.$transaction(async (tx: Tx) => {
-      const winner = item.bids[0] ?? null;
+      // Lock the item row so concurrent processExpiredAuctions calls queue up,
+      // then skip if another call already settled this item.
+      const rows = await tx.$queryRaw<{ status: string }[]>`
+        SELECT status FROM "Item" WHERE id = ${itemId} FOR UPDATE
+      `;
+      if (!rows[0] || rows[0].status !== AuctionStatus.active) return;
+
+      // Re-read winner bid inside the lock to get a consistent snapshot.
+      const winner = await tx.bid.findFirst({
+        where: { itemId, isCurrentHighest: true, status: BidStatus.active },
+      });
 
       if (winner) {
         await tx.player.update({
@@ -41,12 +50,12 @@ export async function processExpiredAuctions() {
           data: { status: BidStatus.won, isCurrentHighest: false },
         });
         await tx.item.update({
-          where: { id: item.id },
+          where: { id: itemId },
           data: { status: AuctionStatus.ended, winnerId: winner.playerId, winningBid: winner.amount },
         });
       } else {
         await tx.item.update({
-          where: { id: item.id },
+          where: { id: itemId },
           data: { status: AuctionStatus.ended },
         });
       }

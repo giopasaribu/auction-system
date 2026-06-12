@@ -98,6 +98,8 @@ export default function PlayPage() {
         <div className="flex items-center gap-4 text-sm">
           {me && (
             <span>
+              <span className="font-semibold">{user.username}</span>
+              <span className="text-muted-foreground mx-2">·</span>
               <span className="text-muted-foreground">Points: </span>
               <strong>{me.totalPoints}</strong>
               {me.heldPoints > 0 && <span className="text-amber-600 ml-1">({me.heldPoints} held)</span>}

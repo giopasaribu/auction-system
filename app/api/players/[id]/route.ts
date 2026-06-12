@@ -22,11 +22,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
-  // Cancel any active leading bids before deleting
-  await prisma.bid.updateMany({
-    where: { playerId: id, isCurrentHighest: true, status: "active" },
-    data: { status: "cancelled", isCurrentHighest: false },
-  });
+  // Remove all bid records for this player and clear any item wins before deleting
+  await prisma.bid.deleteMany({ where: { playerId: id } });
+  await prisma.item.updateMany({ where: { winnerId: id }, data: { winnerId: null, winningBid: null } });
   await prisma.player.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

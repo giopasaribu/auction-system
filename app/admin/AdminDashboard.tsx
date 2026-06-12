@@ -248,7 +248,8 @@ function PlayerRow({ player, onUpdated }: { player: PlayerRow; onUpdated: () => 
 
   async function deletePlayer() {
     if (!confirm(`Remove ${player.username}?`)) return;
-    await fetch(`/api/players/${player.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/players/${player.id}`, { method: "DELETE" });
+    if (!res.ok) { const d = await res.json(); return toast.error(d.error ?? "Failed to remove player"); }
     toast.success("Player removed");
     onUpdated();
   }

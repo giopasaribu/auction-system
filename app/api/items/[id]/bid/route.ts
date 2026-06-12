@@ -19,8 +19,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const now = new Date();
 
   const result = await prisma.$transaction(async (tx: Tx) => {
-    // Lock the player row first so concurrent bids from the same player queue up
-    // rather than racing and all passing the points check simultaneously.
+    // Lock item row: serializes concurrent bids on the same item (fixes +1 race, duplicate-amount race)
+    await tx.$queryRaw`SELECT id FROM "Item" WHERE id = ${itemId} FOR UPDATE`;
+    // Lock player row: serializes concurrent bids from the same player across different items
     await tx.$queryRaw`SELECT id FROM "Player" WHERE id = ${session.userId!} FOR UPDATE`;
 
     const item = await tx.item.findUnique({ where: { id: itemId } });

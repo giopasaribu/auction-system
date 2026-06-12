@@ -19,6 +19,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const now = new Date();
 
   const result = await prisma.$transaction(async (tx: Tx) => {
+    // Lock the player row first so concurrent bids from the same player queue up
+    // rather than racing and all passing the points check simultaneously.
+    await tx.$queryRaw`SELECT id FROM "Player" WHERE id = ${session.userId!} FOR UPDATE`;
+
     const item = await tx.item.findUnique({ where: { id: itemId } });
     if (!item) return { error: "Item not found", status: 404 };
 
